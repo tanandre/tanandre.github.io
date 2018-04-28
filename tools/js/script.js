@@ -1,3 +1,5 @@
+const KEY_AUTO_COPY = 'tanandre.github.io.tools.autoCopy';
+
 function isChrome () {
 	return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 }
@@ -23,27 +25,40 @@ function prettifyXml (sourceXml) {
 		}
 	}
 	return resultXml;
-};
+}
 
+function formatJson (value) {
+	return JSON.stringify(JSON.parse(value), null, "\t");
+}
 
 let app = new Vue({
 	el: '#app',
 	data () {
 		return {
 			textarea: '',
+			autoCopy: localStorage.getItem(KEY_AUTO_COPY) !== 'false',
 			showError: false,
 			showCopy: false,
 			error: null,
 			drawer: true,
+			showTextarea: false,
 			actions: [
-				{label: 'encode URL', icon: 'cloud', action: this.encodeURL},
-				{label: 'decode URL', icon: 'cloud_queue', action: this.decodeURL},
-				{label: 'encode Base64', icon: 'hdr_strong', action: this.encodeBase64},
-				{label: 'decode Base64', icon: 'hdr_weak', action: this.decodeBase64},
-				{label: 'format JSON', icon: 'format_line_spacing', action: this.formatJson},
-				{label: 'format XML', icon: 'code', action: this.formatXml}
+				{label: 'encode URL', icon: 'cloud', action: encodeURIComponent},
+				{label: 'decode URL', icon: 'cloud_queue', action: decodeURIComponent},
+				{label: 'encode Base64', icon: 'hdr_strong', action: btoa},
+				{label: 'decode Base64', icon: 'hdr_weak', action: atob},
+				{label: 'format JSON', icon: 'format_line_spacing', action: formatJson},
+				{label: 'format XML', icon: 'code', action: prettifyXml}
 			]
 		}
+	},
+	mounted () {
+		console.log(this.$refs['textareaContainer'].parentNode.clientHeight);
+		const parentHeight = this.$refs['textareaContainer'].parentNode.clientHeight;
+		const padding = 100;
+		const height = Math.max(parentHeight - padding, 200);
+		document.getElementById("textArea").setAttribute("style", "height:" + height + 'px');
+		this.showTextarea = true;
 	},
 	methods: {
 		displayError (error) {
@@ -72,49 +87,20 @@ let app = new Vue({
 		safeExecute (fnc) {
 			this.error = null;
 			try {
-				fnc.call(this);
-				this.copyToClipboard();
+				this.textarea = fnc(this.textarea);
+				if (this.autoCopy) {
+					this.copyToClipboard();
+				}
 			} catch (e) {
 				console.error(e);
 				this.error = e;
 				this.showError = true;
 			}
-		},
-
-		encodeURL () {
-			this.safeExecute(() => {
-				this.textarea = encodeURIComponent(this.textarea);
-			});
-		},
-
-		decodeURL () {
-			this.safeExecute(() => {
-				this.textarea = decodeURIComponent(this.textarea);
-			});
-		},
-
-		encodeBase64 () {
-			this.safeExecute(() => {
-				this.textarea = btoa(this.textarea);
-			});
-		},
-
-		decodeBase64 () {
-			this.safeExecute(() => {
-				this.textarea = atob(this.textarea);
-			});
-		},
-
-		formatJson () {
-			this.safeExecute(() => {
-				this.textarea = JSON.stringify(JSON.parse(this.textarea), null, "\t");
-			});
-		},
-
-		formatXml () {
-			this.safeExecute(() => {
-				this.textarea = prettifyXml(this.textarea);
-			});
+		}
+	},
+	watch: {
+		'autoCopy' (value) {
+			localStorage.setItem(KEY_AUTO_COPY, value);
 		}
 	}
 })
