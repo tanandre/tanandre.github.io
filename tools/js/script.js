@@ -1,10 +1,5 @@
-function copyToClipboard () {
-	setTimeout(() => {
-		const ta = document.getElementById("textArea");
-		ta.focus();
-		ta.select();
-		document.execCommand('copy');
-	})
+function isChrome () {
+	return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 }
 
 function prettifyXml (sourceXml) {
@@ -21,39 +16,68 @@ function prettifyXml (sourceXml) {
 	const xsltProcessor = new XSLTProcessor();
 	xsltProcessor.importStylesheet(xsltDoc);
 	const resultDoc = xsltProcessor.transformToDocument(xmlDoc);
-	return new XMLSerializer().serializeToString(resultDoc);
+	const resultXml = new XMLSerializer().serializeToString(resultDoc);
+	if (isChrome()) {
+		if (resultXml.includes('parsererror') && resultXml.includes('This page contains the following errors')) {
+			throw new Error('cannot parse XML');
+		}
+	}
+	return resultXml;
 };
 
 
-// function encodeURL1 () {
-// 	alert('test');
-// }
-
-var app = new Vue({
+let app = new Vue({
 	el: '#app',
 	data () {
 		return {
 			textarea: '',
+			showError: false,
+			showCopy: false,
 			error: null,
+			drawer: true,
 			actions: [
-				{label: 'encode URL', icon:'skip_next', action: this.encodeURL},
-				{label: 'decode URL', icon:'skip_previous', action: this.decodeURL},
-				{label: 'encode Base64', icon:'skip_next', action: this.encodeBase64},
-				{label: 'decode Base64', icon:'skip_previous', action: this.decodeBase64},
-				{label: 'format JSON', icon:'code', action: this.formatJson},
-				{label: 'format XML', icon:'code', action: this.formatXml}
+				{label: 'encode URL', icon: 'cloud', action: this.encodeURL},
+				{label: 'decode URL', icon: 'cloud_queue', action: this.decodeURL},
+				{label: 'encode Base64', icon: 'hdr_strong', action: this.encodeBase64},
+				{label: 'decode Base64', icon: 'hdr_weak', action: this.decodeBase64},
+				{label: 'format JSON', icon: 'code', action: this.formatJson},
+				{label: 'format XML', icon: 'code', action: this.formatXml}
 			]
 		}
 	},
 	methods: {
+		displayError (error) {
+			if (error.message) {
+				return error.message;
+			}
+			if (error.stack) {
+				return error.stack;
+			}
+
+			return 'something went wrong';
+		},
+		copyToClipboard () {
+			const ta = document.getElementById("textArea");
+			if (!ta.value) {
+				return;
+			}
+			setTimeout(() => {
+				ta.focus();
+				ta.select();
+				document.execCommand('copy');
+				this.showCopy = true;
+			})
+		},
+
 		safeExecute (fnc) {
 			this.error = null;
 			try {
 				fnc.call(this);
-				copyToClipboard();
+				this.copyToClipboard();
 			} catch (e) {
 				console.error(e);
 				this.error = e;
+				this.showError = true;
 			}
 		},
 
