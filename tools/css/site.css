@@ -3,6 +3,13 @@
     font-size: 12px;
 }
 
+.start .textarea.input-group {
+    padding: 0;
+}
+.start .textarea.input-group label {
+    top: 12px;
+}
+
 .errorMessage {
     white-space: nowrap;
     overflow: hidden;

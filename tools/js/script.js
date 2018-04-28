@@ -40,7 +40,7 @@ let app = new Vue({
 				{label: 'decode URL', icon: 'cloud_queue', action: this.decodeURL},
 				{label: 'encode Base64', icon: 'hdr_strong', action: this.encodeBase64},
 				{label: 'decode Base64', icon: 'hdr_weak', action: this.decodeBase64},
-				{label: 'format JSON', icon: 'code', action: this.formatJson},
+				{label: 'format JSON', icon: 'format_line_spacing', action: this.formatJson},
 				{label: 'format XML', icon: 'code', action: this.formatXml}
 			]
 		}
