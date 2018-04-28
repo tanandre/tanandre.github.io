@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>  
+  <head>  
+    <title>Tools page</title>
+    <link rel="stylesheet" href="css/fontCss.css">  
+    <link rel="stylesheet" href="css/icon.css">
+    <link rel="stylesheet" href="material/vue-material.css">
+    <script src="vue.min.js"></script>  
+    <script src="material/vue-material.js"></script>
+    <style type="text/css">
+    body {   		
+      font-family: Verdana;   		
+      font-size: 0.8em;   	
+    }   	
+    .siteTitle {   		
+      font-weight: bold;   	
+    }
+    .start .md-card .md-card-header {
+      padding: 0 16px;
+    }
+    .md-card .md-title {
+      font-size: 1.2em;
+      line-height: normal;
+    }
+    .textArea {
+      width: 50%;
+      height: 300px;
+         background-color: #aeaeae;
+
+    }
+    .error {
+      color: #a94442;
+      background-color: #f2dede;
+      border-color: #ebccd1;
+      padding: 10px;
+  }
+  
+    </style>  
+  </head>  
+  <body class="start">  
+    <div id="app">    
+      <md-card>
+        <md-card-header>
+          <div class="md-title">Tools</div>
+        </md-card-header>
+        <md-card-content>
+          <div class="left">
+            <div class="error" v-if="error">
+              {{error.message}}
+            </div>
+            <div>
+              <md-button @click.native="encodeURL" class="md-raised">encodeURL</md-button>
+              <md-button @click.native="decodeURL" class="md-raised">decodeURL</md-button>
+            </div>
+            <div>
+              <md-button @click.native="encodeBase64" class="md-raised">encodeBase64</md-button>
+              <md-button @click.native="decodeBase64" class="md-raised">decodeBase64</md-button>
+            </div>
+            <div>
+              <md-button @click.native="formatJson" class="md-raised">formatJson</md-button>
+              <md-button @click.native="formatXml" class="md-raised">formatXml</md-button>
+            </div>
+          </div>
+          <div class="right">
+            <textarea id="textArea" class="textArea" v-model="textarea" autofocus></textarea>
+          </div>
+        </md-card-content>
+      </md-card>
+    </div>  
+<script>
+Vue.use(VueMaterial);
+  function copyToClipboard() {
+    setTimeout(() => {
+      const ta = document.getElementById("textArea");
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+    })
+  }
+  
+  function prettifyXml(sourceXml) {
+    const xmlDoc = new DOMParser().parseFromString(sourceXml, 'application/xml');
+    const xsltDoc = new DOMParser().parseFromString([
+        '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
+        '  <xsl:output omit-xml-declaration="yes" indent="yes"/>',
+        '    <xsl:template match="node()|@*">',
+        '      <xsl:copy><xsl:apply-templates select="node()|@*"/></xsl:copy>',
+        '    </xsl:template>',
+        '</xsl:stylesheet>',
+    ].join('\n'), 'application/xml');
+
+    const xsltProcessor = new XSLTProcessor();    
+    xsltProcessor.importStylesheet(xsltDoc);
+    const resultDoc = xsltProcessor.transformToDocument(xmlDoc);
+    return new XMLSerializer().serializeToString(resultDoc);
+};
+  
+  Vue.material.registerTheme('default', {
+    primary: 'blue',
+    'default': 'blue',
+    accent: 'red',
+    warn: 'red',
+    background: 'grey',
+    theme: 'dark'
+  })
+
+  var app = new Vue({
+  el: '#app',
+  data: {
+    textarea: '',
+    error: null
+  },
+  methods: {
+    safeExecute(fnc) {
+        this.error = null;
+        try {
+          fnc.call(this);
+          copyToClipboard();
+        } catch(e) {
+          console.error(e);
+          this.error = e;
+        }
+    },
+
+    encodeURL()  {
+      this.safeExecute(() => {
+        this.textarea = encodeURIComponent(this.textarea);
+      });
+    },
+
+    decodeURL() {
+      this.safeExecute(() => {
+        this.textarea = decodeURIComponent(this.textarea);
+      });
+    },
+
+    encodeBase64() {
+      this.safeExecute(() => {
+        this.textarea = btoa(this.textarea);
+      });
+    },
+
+    decodeBase64() {
+      this.safeExecute(() => {
+        this.textarea = atob(this.textarea);
+      });
+    },
+    
+    formatJson() {
+      this.safeExecute(() => {
+        this.textarea = JSON.stringify(JSON.parse(this.textarea), null, "\t");
+      });
+    },
+    
+    formatXml() {
+      this.safeExecute(() => {
+        this.textarea = prettifyXml(this.textarea);
+      });
+    }
+  }
+})
+  </script>  
+  </body>
+</html>
