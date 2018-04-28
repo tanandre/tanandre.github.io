@@ -6,14 +6,18 @@
     <link rel="stylesheet" href="css/fontCss.css">  
     <link rel="stylesheet" href="css/icon.css">
     <link rel="stylesheet" href="material/vue-material.css">
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/vue-material@beta"></script>
     -->
     
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic|Material+Icons">
     <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/vue-material.min.css">
     <link rel="stylesheet" href="https://unpkg.com/vue-material@beta/dist/theme/default.css">
     
-    <script src="https://unpkg.com/vue"></script>
-    <script src="https://unpkg.com/vue-material@beta"></script>
+    
+    <script src="https://unpkg.com/vue@2.5.16/dist/vue.js"></script>  
+    <script src="https://unpkg.com/vue-material@0.7.1/dist/vue-material.js"></script>
+
     <style type="text/css">
     body {   		
       font-family: Verdana;   		
@@ -102,14 +106,14 @@ Vue.use(VueMaterial);
     return new XMLSerializer().serializeToString(resultDoc);
 };
   
-  /*Vue.material.registerTheme('default', {
+  Vue.material.registerTheme('default', {
     primary: 'blue',
     'default': 'blue',
     accent: 'red',
     warn: 'red',
     background: 'grey',
     theme: 'dark'
-  })*/
+  })
 
   var app = new Vue({
   el: '#app',
