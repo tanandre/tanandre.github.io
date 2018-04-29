@@ -10,6 +10,7 @@ function renderButton() {
 		'onsuccess': onSuccess,
 		'onfailure': onFailure
 	});
+}
 
 function onSignIn(googleUser) {
 	var profile = googleUser.getBasicProfile();
