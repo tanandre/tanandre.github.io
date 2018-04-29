@@ -1,5 +1,13 @@
 const KEY_AUTO_COPY = 'tanandre.github.io.tools.autoCopy';
 
+function debounce (ms) {
+	let timer = 0;
+	return (callback) => {
+		clearTimeout(timer);
+		timer = setTimeout(callback, ms);
+	}
+}
+
 function isChrome () {
 	return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 }
@@ -8,17 +16,16 @@ function prettifyXml (sourceXml) {
 	const xmlDoc = new DOMParser().parseFromString(sourceXml, 'application/xml');
 	const xsltDoc = new DOMParser().parseFromString([
 		'<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
-		'  <xsl:output omit-xml-declaration="yes" indent="yes"/>',
-		'    <xsl:template match="node()|@*">',
-		'      <xsl:copy><xsl:apply-templates select="node()|@*"/></xsl:copy>',
-		'    </xsl:template>',
+		'<xsl:output omit-xml-declaration="yes" indent="yes"/>',
+		'<xsl:template match="node()|@*">',
+		'<xsl:copy><xsl:apply-templates select="node()|@*"/></xsl:copy>',
+		'</xsl:template>',
 		'</xsl:stylesheet>',
 	].join('\n'), 'application/xml');
 
 	const xsltProcessor = new XSLTProcessor();
 	xsltProcessor.importStylesheet(xsltDoc);
-	const resultDoc = xsltProcessor.transformToDocument(xmlDoc);
-	const resultXml = new XMLSerializer().serializeToString(resultDoc);
+	const resultXml = new XMLSerializer().serializeToString(xsltProcessor.transformToDocument(xmlDoc));
 	if (isChrome()) {
 		if (resultXml.includes('parsererror') && resultXml.includes('This page contains the following errors')) {
 			throw new Error('cannot parse XML');
@@ -30,6 +37,8 @@ function prettifyXml (sourceXml) {
 function formatJson (value) {
 	return JSON.stringify(JSON.parse(value), null, "\t");
 }
+
+let copyDebouncer = debounce(400);
 
 let app = new Vue({
 	el: '#app',
@@ -53,19 +62,22 @@ let app = new Vue({
 		}
 	},
 	mounted () {
-		console.log(this.$refs['textareaContainer'].parentNode.clientHeight);
-		const parentHeight = this.$refs['textareaContainer'].parentNode.clientHeight;
-		const padding = 100;
-		const height = Math.max(parentHeight - padding, 200);
-		document.getElementById("textArea").setAttribute("style", "height:" + height + 'px');
-		this.showTextarea = true;
+		this.resizeTextArea();
 	},
 	methods: {
+		resizeTextArea () {
+			const parentHeight = this.$refs['textareaContainer'].parentNode.clientHeight;
+			console.log('resize', parentHeight);
+			const padding = 100;
+			const height = Math.max(parentHeight - padding, 200);
+			document.getElementById("textArea").setAttribute("style", "height:" + height + 'px');
+			this.showTextarea = true;
+		},
+
 		displayError (error) {
 			if (error.message) {
 				return error.message;
-			}
-			if (error.stack) {
+			} else if (error.stack) {
 				return error.stack;
 			}
 
@@ -80,8 +92,11 @@ let app = new Vue({
 				ta.focus();
 				ta.select();
 				document.execCommand('copy');
-				this.showCopy = true;
-			})
+
+				copyDebouncer(() => {
+					this.showCopy = true;
+				});
+			});
 		},
 
 		safeExecute (fnc) {
