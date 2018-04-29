@@ -21,6 +21,10 @@ html {
     text-overflow: ellipsis;
 }
 
-.start .icon {
+.start .errorMessage .icon {
     margin-right: 5px;
+}
+
+.toolbar .abcRioButtonLightBlue {
+    background-color: rgb(48, 48, 48);
 }
