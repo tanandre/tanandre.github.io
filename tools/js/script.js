@@ -1,6 +1,6 @@
 const KEY_AUTO_COPY = 'tanandre.github.io.tools.autoCopy';
 
-function renderButton() {
+function renderButton () {
 	gapi.signin2.render('my-signin2', {
 		'scope': 'profile email',
 		'width': 240,
@@ -12,14 +12,14 @@ function renderButton() {
 	});
 }
 
-function signOut() {
+function signOut () {
 	var auth2 = gapi.auth2.getAuthInstance();
 	auth2.signOut().then(function () {
 		console.log('User signed out.');
 	});
 }
 
-function onSignIn(googleUser) {
+function onSignIn (googleUser) {
 	var profile = googleUser.getBasicProfile();
 	console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
 	console.log('Name: ' + profile.getName());
@@ -92,6 +92,10 @@ let app = new Vue({
 		this.resizeTextArea();
 	},
 	methods: {
+		signOut () {
+			signOut();
+		},
+
 		resizeTextArea () {
 			const parentHeight = this.$refs['textareaContainer'].parentNode.clientHeight;
 			const padding = 100;
