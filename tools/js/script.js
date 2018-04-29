@@ -21,7 +21,7 @@ function prettifyXml (sourceXml) {
 		'<xsl:copy><xsl:apply-templates select="node()|@*"/></xsl:copy>',
 		'</xsl:template>',
 		'</xsl:stylesheet>',
-	].join('\n'), 'application/xml');
+	].join(''), 'application/xml');
 
 	const xsltProcessor = new XSLTProcessor();
 	xsltProcessor.importStylesheet(xsltDoc);
@@ -67,10 +67,9 @@ let app = new Vue({
 	methods: {
 		resizeTextArea () {
 			const parentHeight = this.$refs['textareaContainer'].parentNode.clientHeight;
-			console.log('resize', parentHeight);
 			const padding = 100;
 			const height = Math.max(parentHeight - padding, 200);
-			document.getElementById("textArea").setAttribute("style", "height:" + height + 'px');
+			document.getElementById('textArea').setAttribute('style', 'height:' + height + 'px');
 			this.showTextarea = true;
 		},
 
@@ -84,10 +83,7 @@ let app = new Vue({
 			return 'something went wrong';
 		},
 		copyToClipboard () {
-			const ta = document.getElementById("textArea");
-			if (!ta.value) {
-				return;
-			}
+			const ta = document.getElementById('textArea');
 			setTimeout(() => {
 				ta.focus();
 				ta.select();
@@ -102,6 +98,9 @@ let app = new Vue({
 		safeExecute (fnc) {
 			this.error = null;
 			try {
+				if (!this.textarea) {
+					return;
+				}
 				this.textarea = fnc(this.textarea);
 				if (this.autoCopy) {
 					this.copyToClipboard();
@@ -118,4 +117,4 @@ let app = new Vue({
 			localStorage.setItem(KEY_AUTO_COPY, value);
 		}
 	}
-})
+});
