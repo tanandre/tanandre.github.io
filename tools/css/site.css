@@ -1,5 +1,6 @@
 html {
     background-color: rgb(48, 48, 48);
+    overflow-y: auto;
 }
 
 .start .textarea textarea {
@@ -25,6 +26,10 @@ html {
     margin-right: 5px;
 }
 
+.start .navigation-drawer {
+    padding: 0px;
+}
+
 /*.toolbar .abcRioButtonLightBlue {*/
-    /*background-color: rgb(48, 48, 48);*/
+/*background-color: rgb(48, 48, 48);*/
 /*}*/
