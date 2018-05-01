@@ -1,16 +1,5 @@
 const KEY_AUTO_COPY = 'tanandre.github.io.tools.autoCopy';
-
-function renderButton () {
-	gapi.signin2.render('my-signin2', {
-		'scope': 'profile email',
-		'width': 240,
-		'height': 50,
-		'longtitle': true,
-		'theme': 'dark',
-		'onsuccess': onSuccess,
-		'onfailure': onFailure
-	});
-}
+const KEY_WORD_WRAP = 'tanandre.github.io.tools.wordWrap';
 
 function signOut () {
 	var auth2 = gapi.auth2.getAuthInstance();
@@ -39,7 +28,7 @@ function isChrome () {
 	return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 }
 
-function prettifyXml (sourceXml) {
+function formatXml (sourceXml) {
 	const xmlDoc = new DOMParser().parseFromString(sourceXml, 'application/xml');
 	const xsltDoc = new DOMParser().parseFromString([
 		'<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
@@ -73,35 +62,76 @@ let app = new Vue({
 		return {
 			textarea: '',
 			autoCopy: localStorage.getItem(KEY_AUTO_COPY) !== 'false',
+			wrap: localStorage.getItem(KEY_WORD_WRAP) !== 'false',
 			showError: false,
 			showCopy: false,
 			error: null,
 			drawer: true,
-			showTextarea: false,
+			showTextarea: true,
 			actions: [
-				{label: 'encode URL', icon: 'cloud', action: encodeURIComponent},
-				{label: 'decode URL', icon: 'cloud_queue', action: decodeURIComponent},
-				{label: 'encode Base64', icon: 'hdr_strong', action: btoa},
-				{label: 'decode Base64', icon: 'hdr_weak', action: atob},
-				{label: 'format JSON', icon: 'format_line_spacing', action: formatJson},
-				{label: 'format XML', icon: 'code', action: prettifyXml}
+				{label: 'encode URL', icon: 'cloud', shortKey: 'ctrl-[', action: encodeURIComponent},
+				{label: 'decode URL', icon: 'cloud_queue', shortKey: 'ctrl-shift-[', action: decodeURIComponent},
+				{label: 'encode Base64', icon: 'hdr_strong', shortKey: 'ctrl-]', action: btoa},
+				{label: 'decode Base64', icon: 'hdr_weak', shortKey: 'ctrl-shift-]', action: atob},
+				{label: 'format JSON', icon: 'format_line_spacing', shortKey: 'ctrl-shift-f', action: formatJson},
+				{label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatXml}
 			]
 		}
 	},
 	mounted () {
+		window.addEventListener('keydown', this.onKeyDown)
 		this.resizeTextArea();
 	},
 	methods: {
+		onKeyDown (key) {
+			if (!this.textarea) {
+				return;
+			}
+
+			// console.log(key, key.keyCode);
+			if (key.ctrlKey && key.shiftKey && key.keyCode === 70) {
+				let errors = [];
+				try {
+					this.textarea = formatJson(this.textarea);
+				} catch (e) {
+					errors.push(e);
+				}
+				try {
+					this.textarea = formatXml(this.textarea.trim());
+				} catch (e) {
+					errors.push(e);
+				}
+
+				if (errors.length === 2) {
+					this.handleError(new Error('text not formatted: could not parse as JSON or XML'));
+				}
+				return;
+			}
+
+			if (key.ctrlKey && !key.shiftKey && key.keyCode === 219) {
+				return this.safeExecute(encodeURIComponent);
+			} else if (key.ctrlKey && key.shiftKey && key.keyCode === 219) {
+				return this.safeExecute(decodeURIComponent);
+			} else if (key.ctrlKey && !key.shiftKey && key.keyCode === 221) {
+				return this.safeExecute(btoa);
+			} else if (key.ctrlKey && key.shiftKey && key.keyCode === 221) {
+				return this.safeExecute(atob);
+			}
+		},
+
 		signOut () {
 			signOut();
 		},
 
+		getTextArea () {
+			return this.$refs['textareaContainer'].$el ? this.$refs['textareaContainer'].$el : this.$refs['textareaContainer'];
+		},
+
 		resizeTextArea () {
-			const parentHeight = this.$refs['textareaContainer'].parentNode.clientHeight;
-			const padding = 100;
-			const height = Math.max(parentHeight - padding, 200);
-			document.getElementById('textArea').setAttribute('style', 'height:' + height + 'px');
+			let ta = this.getTextArea();
+			ta.setAttribute('style', 'height:' + ta.parentNode.clientHeight + 'px');
 			this.showTextarea = true;
+			ta.focus();
 		},
 
 		displayError (error) {
@@ -114,7 +144,7 @@ let app = new Vue({
 			return 'something went wrong';
 		},
 		copyToClipboard () {
-			const ta = document.getElementById('textArea');
+			const ta = this.getTextArea();
 			setTimeout(() => {
 				ta.focus();
 				ta.select();
@@ -126,6 +156,12 @@ let app = new Vue({
 			});
 		},
 
+		handleError (e) {
+			console.error(e);
+			this.error = e;
+			this.showError = true;
+		},
+
 		safeExecute (fnc) {
 			this.error = null;
 			try {
@@ -133,19 +169,23 @@ let app = new Vue({
 					return;
 				}
 				this.textarea = fnc(this.textarea);
+				const ta = this.getTextArea();
+				ta.blur();
+				ta.focus();
 				if (this.autoCopy) {
 					this.copyToClipboard();
 				}
 			} catch (e) {
-				console.error(e);
-				this.error = e;
-				this.showError = true;
+				this.handleError(e);
 			}
 		}
 	},
 	watch: {
 		'autoCopy' (value) {
 			localStorage.setItem(KEY_AUTO_COPY, value);
+		},
+		'wordWrap' (value) {
+			localStorage.setItem(KEY_WORD_WRAP, value);
 		}
 	}
 });

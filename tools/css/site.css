@@ -1,6 +1,14 @@
 html {
     background-color: rgb(48, 48, 48);
-    overflow-y: auto;
+    overflow-y: hidden;
+}
+
+.start textarea {
+    width: 100%;
+    padding: 10px;
+    font-family: "Courier New";
+    margin: 0;
+    border: none;
 }
 
 .start .textarea textarea {
@@ -22,12 +30,29 @@ html {
     text-overflow: ellipsis;
 }
 
-.start .errorMessage .icon {
+.start .snackbarIcon.icon {
     margin-right: 5px;
 }
 
 .start .navigation-drawer {
     padding: 0px;
+}
+
+.start small.shortKey {
+    color: #777;
+}
+
+/* turn off chrome textarea highlight */
+textarea:focus {
+    outline: none;
+}
+
+textarea {
+    overflow: auto;
+}
+
+textarea.nowrap {
+    white-space: nowrap;
 }
 
 /*.toolbar .abcRioButtonLightBlue {*/

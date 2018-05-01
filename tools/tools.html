@@ -9,7 +9,7 @@
          content="1077350742810-7qrk16i7bskl4brbed9su2pfipbltme9.apps.googleusercontent.com">
    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
    <link rel="stylesheet" href="css/site.css">
-   <script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>
+   <script src="https://apis.google.com/js/platform.js" async defer></script>
    <!--
    <script src="https://unpkg.com/vue"></script>
    <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
@@ -30,6 +30,11 @@
                <v-list-tile-content>
                   <v-list-tile-title>{{action.label}}</v-list-tile-title>
                </v-list-tile-content>
+               <v-list-tile-action>
+                  <v-list-tile-sub-title>
+                     <small class="shortKey">{{action.shortKey}}</small>
+                  </v-list-tile-sub-title>
+               </v-list-tile-action>
             </v-list-tile>
             <v-divider></v-divider>
             <v-subheader>Settings</v-subheader>
@@ -39,6 +44,14 @@
                </v-list-tile-action>
                <v-list-tile-content @click="autoCopy = !autoCopy">
                   <v-list-tile-title>Auto copy</v-list-tile-title>
+               </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile @click="">
+               <v-list-tile-action>
+                  <v-switch v-model="wrap"></v-switch>
+               </v-list-tile-action>
+               <v-list-tile-content @click="wrap = !wrap">
+                  <v-list-tile-title>Word wrap</v-list-tile-title>
                </v-list-tile-content>
             </v-list-tile>
          </v-list>
@@ -51,28 +64,26 @@
          <!--<div class="g-signin2" data-onsuccess="onSignIn"></div>-->
 
          <v-toolbar-items>
-            <!--<v-btn @click="signOut()">Sign out-->
-               <!--<v-icon right dark>account_circle</v-icon>-->
-            <!--</v-btn>-->
+            <v-btn @click="signOut()">Sign out
+               <v-icon right dark>account_circle</v-icon>
+            </v-btn>
          </v-toolbar-items>
       </v-toolbar>
       <v-content>
-         <v-container fluid ref="textareaContainer">
-            <v-text-field
-                    v-show="showTextarea"
-                    name="textArea"
-                    id="textArea"
-                    v-model="textarea"
-                    label="input"
-                    class="textarea"
-                    textarea
-                    autofocus></v-text-field>
-         </v-container>
-         <v-snackbar v-model="showError" v-if="error" color="error">
-            <span class="errorMessage" :title="displayError(error)"><v-icon>error</v-icon><b>Error:</b> {{displayError(error)}}</span>
+         <textarea
+                 ref="textareaContainer"
+                 v-show="showTextarea"
+                 v-model="textarea"
+                 class="textarea"
+                 :class="{nowrap: !wrap}"
+                 autofocus
+         ></textarea>
+         <v-snackbar v-model="showError" v-if="error" color="error" timeout="99999">
+            <span :title="displayError(error)" class="errorMessage"><v-icon
+                    class="snackbarIcon">error</v-icon><b>Error:</b> {{displayError(error)}}</span>
          </v-snackbar>
          <v-snackbar v-model="showCopy" top timeout="1000">
-            <small>Text copied...</small>
+            <span><v-icon class="snackbarIcon">content_copy</v-icon><small>Text copied...</small></span>
          </v-snackbar>
       </v-content>
    </v-app>
