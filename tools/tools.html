@@ -2,7 +2,7 @@
 <html>
 <head>
    <title>String Tools</title>
-
+   <meta charset="utf-8"/>
    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
    <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
    <meta name="google-signin-client_id"
@@ -18,7 +18,7 @@
    <script src="https://unpkg.com/vuetify@1.0.17/dist/vuetify.js"></script>
 </head>
 <body class="start">
-<div id="app">
+<div id="app" :class="{edge: isEdge}">
    <v-app dark>
       <v-navigation-drawer clipped fixed v-model="drawer" app>
          <v-list dense>
@@ -48,9 +48,9 @@
             </v-list-tile>
             <v-list-tile @click="">
                <v-list-tile-action>
-                  <v-switch v-model="wrap"></v-switch>
+                  <v-switch v-model="wordWrap"></v-switch>
                </v-list-tile-action>
-               <v-list-tile-content @click="wrap = !wrap">
+               <v-list-tile-content @click="wordWrap = !wordWrap">
                   <v-list-tile-title>Word wrap</v-list-tile-title>
                </v-list-tile-content>
             </v-list-tile>
@@ -64,18 +64,18 @@
          <!--<div class="g-signin2" data-onsuccess="onSignIn"></div>-->
 
          <v-toolbar-items>
-            <v-btn @click="signOut()">Sign out
+            <v-btn @click="signOut()" flat small>Sign out
                <v-icon right dark>account_circle</v-icon>
             </v-btn>
          </v-toolbar-items>
       </v-toolbar>
       <v-content>
          <textarea
+                 @blur="onTextAreaBlur()"
                  ref="textareaContainer"
                  v-show="showTextarea"
-                 v-model="textarea"
                  class="textarea"
-                 :class="{nowrap: !wrap}"
+                 :class="{nowrap: !wordWrap}"
                  autofocus
          ></textarea>
          <v-snackbar v-model="showError" v-if="error" color="error" timeout="99999">

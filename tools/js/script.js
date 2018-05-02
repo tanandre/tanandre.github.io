@@ -24,34 +24,53 @@ function debounce (ms) {
 	}
 }
 
-function isChrome () {
-	return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-}
+function formatXml (input) {
+	const indent = '\t'; //you can set/define other ident than tabs
+	// let xmlString = input.replace(/^\s+|\s+$/g, '');  //trim it (just in case) {method trim() not working in IE8}
 
-function formatXml (sourceXml) {
-	const xmlDoc = new DOMParser().parseFromString(sourceXml, 'application/xml');
-	const xsltDoc = new DOMParser().parseFromString([
-		'<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">',
-		'<xsl:output omit-xml-declaration="yes" indent="yes"/>',
-		'<xsl:template match="node()|@*">',
-		'<xsl:copy><xsl:apply-templates select="node()|@*"/></xsl:copy>',
-		'</xsl:template>',
-		'</xsl:stylesheet>',
-	].join(''), 'application/xml');
+	const xmlString = input.trim()
+		.replace(/(<([a-zA-Z]+\b)[^>]*>)(?!<\/\2>|[\w\s])/g, "$1\n") //add \n after tag if not followed by the closing tag of pair or text node
+		.replace(/(<\/[a-zA-Z]+[^>]*>)/g, "$1\n") //add \n after closing tag
+		.replace(/>\s+(.+?)\s+<(?!\/)/g, ">\n$1\n<") //add \n between sets of angled brackets and text node between them
+		.replace(/>(.+?)<([a-zA-Z])/g, ">\n$1\n<$2") //add \n between angled brackets and text node between them
+		.replace(/\?></, "?>\n<") //detect a header of XML
 
-	const xsltProcessor = new XSLTProcessor();
-	xsltProcessor.importStylesheet(xsltDoc);
-	const resultXml = new XMLSerializer().serializeToString(xsltProcessor.transformToDocument(xmlDoc));
-	if (isChrome()) {
-		if (resultXml.includes('parsererror') && resultXml.includes('This page contains the following errors')) {
-			throw new Error('cannot parse XML');
+	const xmlArr = xmlString.split('\n');  //split it into an array (for analise each line separately)
+
+	//PART 2: indent each line appropriately
+
+	let tabs = '';  //store the current indentation
+	let start = 0;  //starting line
+
+	if (/^<[?]xml/.test(xmlArr[0])) start++;  //if the first line is a header, ignore it
+
+	for (let i = start; i < xmlArr.length; i++) {
+		let line = xmlArr[i].replace(/^\s+|\s+$/g, '');  //trim it (just in case)
+
+		if (/^<[/]/.test(line)) {
+			tabs = tabs.replace(indent, '');  //remove one indent from the store
+			xmlArr[i] = tabs + line;  //add the tabs at the beginning of the line
+		} else if (/<.*>.*<\/.*>|<.*[^>]\/>/.test(line)) {
+			//leave the store as is
+			xmlArr[i] = tabs + line; //add the tabs at the beginning of the line
+		} else if (/<.*>/.test(line)) {
+			xmlArr[i] = tabs + line;  //add the tabs at the beginning of the line
+			tabs += indent;  //and add one indent to the store
+		} else {
+			xmlArr[i] = tabs + line;  // add the tabs at the beginning of the line
 		}
 	}
-	return resultXml;
+
+	//PART 3: return formatted string (source)
+	return xmlArr.join('\n');  //rejoin the array to a string and return it
 }
 
 function formatJson (value) {
 	return JSON.stringify(JSON.parse(value), null, "\t");
+}
+
+function isEdge() {
+	return /Edge\/\d./i.test(navigator.userAgent);
 }
 
 let copyDebouncer = debounce(400);
@@ -62,12 +81,13 @@ let app = new Vue({
 		return {
 			textarea: '',
 			autoCopy: localStorage.getItem(KEY_AUTO_COPY) !== 'false',
-			wrap: localStorage.getItem(KEY_WORD_WRAP) !== 'false',
+			wordWrap: localStorage.getItem(KEY_WORD_WRAP) !== 'false',
 			showError: false,
 			showCopy: false,
 			error: null,
 			drawer: true,
 			showTextarea: true,
+			isEdge: isEdge(),
 			actions: [
 				{label: 'encode URL', icon: 'cloud', shortKey: 'ctrl-[', action: encodeURIComponent},
 				{label: 'decode URL', icon: 'cloud_queue', shortKey: 'ctrl-shift-[', action: decodeURIComponent},
@@ -81,10 +101,14 @@ let app = new Vue({
 	mounted () {
 		window.addEventListener('keydown', this.onKeyDown)
 		this.resizeTextArea();
+		setTimeout(() => {
+			this.getTextArea().focus();
+		}, 0);
 	},
 	methods: {
 		onKeyDown (key) {
-			if (!this.textarea) {
+			const ta = this.getTextArea();
+			if (!ta.value) {
 				return;
 			}
 
@@ -92,12 +116,12 @@ let app = new Vue({
 			if (key.ctrlKey && key.shiftKey && key.keyCode === 70) {
 				let errors = [];
 				try {
-					this.textarea = formatJson(this.textarea);
+					ta.value = formatJson(ta.value);
 				} catch (e) {
 					errors.push(e);
 				}
 				try {
-					this.textarea = formatXml(this.textarea.trim());
+					ta.value = formatXml(ta.value);
 				} catch (e) {
 					errors.push(e);
 				}
@@ -105,6 +129,7 @@ let app = new Vue({
 				if (errors.length === 2) {
 					this.handleError(new Error('text not formatted: could not parse as JSON or XML'));
 				}
+				this.copyToClipboard();
 				return;
 			}
 
@@ -131,7 +156,6 @@ let app = new Vue({
 			let ta = this.getTextArea();
 			ta.setAttribute('style', 'height:' + ta.parentNode.clientHeight + 'px');
 			this.showTextarea = true;
-			ta.focus();
 		},
 
 		displayError (error) {
@@ -143,16 +167,26 @@ let app = new Vue({
 
 			return 'something went wrong';
 		},
-		copyToClipboard () {
+
+		onTextAreaBlur () {
 			const ta = this.getTextArea();
 			setTimeout(() => {
 				ta.focus();
-				ta.select();
-				document.execCommand('copy');
+			}, 100);
+		},
 
-				copyDebouncer(() => {
-					this.showCopy = true;
-				});
+		copyToClipboard () {
+			const ta = this.getTextArea();
+			// attempt to add to undo buffer
+			ta.blur();
+			ta.focus();
+
+			ta.select();
+			document.execCommand('copy');
+			copyDebouncer(() => {
+				ta.blur();
+				ta.focus();
+				this.showCopy = true;
 			});
 		},
 
@@ -165,13 +199,18 @@ let app = new Vue({
 		safeExecute (fnc) {
 			this.error = null;
 			try {
-				if (!this.textarea) {
+				const ta = this.getTextArea();
+				if (!ta.value) {
 					return;
 				}
-				this.textarea = fnc(this.textarea);
-				const ta = this.getTextArea();
+
+				// attempt to add to undo buffer
 				ta.blur();
 				ta.focus();
+
+				let value = fnc(ta.value);
+				//this.textarea = value;
+				ta.value = value;
 				if (this.autoCopy) {
 					this.copyToClipboard();
 				}
