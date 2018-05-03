@@ -1,5 +1,8 @@
 <template>
   <div class="hello">
+    <v-btn  flat small>Sign out
+      <v-icon right dark>account_circle</v-icon>
+    </v-btn>
     <h1>{{ msg }}</h1>
     <p>
       For guide and recipes on how to configure / customize this project,<br>
