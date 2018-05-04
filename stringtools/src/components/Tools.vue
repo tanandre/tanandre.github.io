@@ -1,55 +1,55 @@
 <template>
-  <v-app dark>
-    <v-navigation-drawer clipped fixed v-model="drawer" app>
-      <v-list dense>
-        <v-subheader>Actions</v-subheader>
-        <v-list-tile v-for="action in actions" @click="safeExecute(action.action)">
-          <v-list-tile-action>
-            <v-icon>{{action.icon}}</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>{{action.label}}</v-list-tile-title>
-          </v-list-tile-content>
-          <v-list-tile-action>
-            <v-list-tile-sub-title>
-              <small class="shortKey">{{action.shortKey}}</small>
-            </v-list-tile-sub-title>
-          </v-list-tile-action>
-        </v-list-tile>
-        <v-divider></v-divider>
-        <v-subheader>Settings</v-subheader>
-        <v-list-tile @click="">
-          <v-list-tile-action>
-            <v-switch v-model="autoCopy"></v-switch>
-          </v-list-tile-action>
-          <v-list-tile-content @click="autoCopy = !autoCopy">
-            <v-list-tile-title>Auto copy</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-        <v-list-tile @click="">
-          <v-list-tile-action>
-            <v-switch v-model="wordWrap"></v-switch>
-          </v-list-tile-action>
-          <v-list-tile-content @click="wordWrap = !wordWrap">
-            <v-list-tile-title>Word wrap</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-      </v-list>
+   <v-app dark>
+      <v-navigation-drawer clipped fixed v-model="drawer" app>
+         <v-list dense>
+            <v-subheader>Actions</v-subheader>
+            <v-list-tile v-for="action in actions" @click="safeExecute(action.action)">
+               <v-list-tile-action>
+                  <v-icon>{{action.icon}}</v-icon>
+               </v-list-tile-action>
+               <v-list-tile-content>
+                  <v-list-tile-title>{{action.label}}</v-list-tile-title>
+               </v-list-tile-content>
+               <v-list-tile-action>
+                  <v-list-tile-sub-title>
+                     <small class="shortKey">{{action.shortKey}}</small>
+                  </v-list-tile-sub-title>
+               </v-list-tile-action>
+            </v-list-tile>
+            <v-divider></v-divider>
+            <v-subheader>Settings</v-subheader>
+            <v-list-tile @click="">
+               <v-list-tile-action>
+                  <v-switch v-model="autoCopy"></v-switch>
+               </v-list-tile-action>
+               <v-list-tile-content @click="autoCopy = !autoCopy">
+                  <v-list-tile-title>Auto copy</v-list-tile-title>
+               </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile @click="">
+               <v-list-tile-action>
+                  <v-switch v-model="wordWrap"></v-switch>
+               </v-list-tile-action>
+               <v-list-tile-content @click="wordWrap = !wordWrap">
+                  <v-list-tile-title>Word wrap</v-list-tile-title>
+               </v-list-tile-content>
+            </v-list-tile>
+         </v-list>
 
-    </v-navigation-drawer>
-    <v-toolbar app fixed clipped-left dense class="toolbar">
-      <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-      <v-toolbar-title>String Tools</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <!--<div class="g-signin2" data-onsuccess="onSignIn"></div>-->
+      </v-navigation-drawer>
+      <v-toolbar app fixed clipped-left dense class="toolbar">
+         <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+         <v-toolbar-title>String Tools</v-toolbar-title>
+         <v-spacer></v-spacer>
+         <!--<div class="g-signin2" data-onsuccess="onSignIn"></div>-->
 
-      <v-toolbar-items>
-        <v-btn @click="signOut()" flat small>Sign out
-          <v-icon right dark>account_circle</v-icon>
-        </v-btn>
-      </v-toolbar-items>
-    </v-toolbar>
-    <v-content>
+         <v-toolbar-items>
+            <v-btn @click="signOut()" flat small>Sign out
+               <v-icon right dark>account_circle</v-icon>
+            </v-btn>
+         </v-toolbar-items>
+      </v-toolbar>
+      <v-content>
          <textarea
                  @blur="onTextAreaBlur()"
                  ref="textareaContainer"
@@ -58,15 +58,12 @@
                  :class="{nowrap: !wordWrap}"
                  autofocus
          ></textarea>
-      <v-snackbar v-model="showError" v-if="error" color="error">
-            <span :title="displayError(error)" class="errorMessage"><v-icon
-                    class="snackbarIcon">error</v-icon><b>Error:</b> {{displayError(error)}}</span>
-      </v-snackbar>
-      <v-snackbar v-model="showCopy" top>
-        <span><v-icon class="snackbarIcon">content_copy</v-icon><small>Text copied...</small></span>
-      </v-snackbar>
-    </v-content>
-  </v-app>
+         <ErrorToaster></ErrorToaster>
+         <v-snackbar v-model="showCopy" top>
+            <span><v-icon class="snackbarIcon">content_copy</v-icon><small>Text copied...</small></span>
+         </v-snackbar>
+      </v-content>
+   </v-app>
 </template>
 
 <script>
@@ -141,233 +138,234 @@
 		return JSON.stringify(JSON.parse(value), null, "\t");
 	}
 
-	function isEdge() {
+	function isEdge () {
 		return /Edge\/\d./i.test(navigator.userAgent);
 	}
 
 	let copyDebouncer = debounce(400);
 
-export default {
-  name: 'tools',
-	data () {
-		return {
-			textarea: '',
-			autoCopy: localStorage.getItem(KEY_AUTO_COPY) !== 'false',
-			wordWrap: localStorage.getItem(KEY_WORD_WRAP) !== 'false',
-			showError: false,
-			showCopy: false,
-			error: null,
-			drawer: true,
-			showTextarea: true,
-			isEdge: isEdge(),
-			actions: [
-				{label: 'encode URL', icon: 'cloud', shortKey: 'ctrl-[', action: encodeURIComponent},
-				{label: 'decode URL', icon: 'cloud_queue', shortKey: 'ctrl-shift-[', action: decodeURIComponent},
-				{label: 'encode Base64', icon: 'hdr_strong', shortKey: 'ctrl-]', action: btoa},
-				{label: 'decode Base64', icon: 'hdr_weak', shortKey: 'ctrl-shift-]', action: atob},
-				{label: 'format JSON', icon: 'format_line_spacing', shortKey: 'ctrl-shift-f', action: formatJson},
-				{label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatXml}
-			]
-		}
-	},
-	mounted () {
-		window.addEventListener('keydown', this.onKeyDown)
-		this.resizeTextArea();
-		setTimeout(() => {
-			this.getTextArea().focus();
-		}, 0);
-	},
-	methods: {
-		onKeyDown (key) {
-			const ta = this.getTextArea();
-			if (!ta.value) {
-				return;
-			}
 
-			// console.log(key, key.keyCode);
-			if (key.ctrlKey && key.shiftKey && key.keyCode === 70) {
-				let errors = [];
-				try {
-					ta.value = formatJson(ta.value);
-				} catch (e) {
-					errors.push(e);
-				}
-				try {
-					ta.value = formatXml(ta.value);
-				} catch (e) {
-					errors.push(e);
-				}
+	import ErrorToaster from './ErrorToaster.vue'
 
-				if (errors.length === 2) {
-					this.handleError(new Error('text not formatted: could not parse as JSON or XML'));
-				}
-				this.copyToClipboard();
-				return;
-			}
-
-			if (key.ctrlKey && !key.shiftKey && key.keyCode === 219) {
-				return this.safeExecute(encodeURIComponent);
-			} else if (key.ctrlKey && key.shiftKey && key.keyCode === 219) {
-				return this.safeExecute(decodeURIComponent);
-			} else if (key.ctrlKey && !key.shiftKey && key.keyCode === 221) {
-				return this.safeExecute(btoa);
-			} else if (key.ctrlKey && key.shiftKey && key.keyCode === 221) {
-				return this.safeExecute(atob);
+	export default {
+		components: {ErrorToaster},
+		name: 'tools',
+		data () {
+			return {
+				textarea: '',
+				autoCopy: localStorage.getItem(KEY_AUTO_COPY) !== 'false',
+				wordWrap: localStorage.getItem(KEY_WORD_WRAP) !== 'false',
+				showCopy: false,
+				drawer: true,
+				showTextarea: true,
+				isEdge: isEdge(),
+				actions: [
+					{label: 'encode URL', icon: 'cloud', shortKey: 'ctrl-[', action: encodeURIComponent},
+					{label: 'decode URL', icon: 'cloud_queue', shortKey: 'ctrl-shift-[', action: decodeURIComponent},
+					{label: 'encode Base64', icon: 'hdr_strong', shortKey: 'ctrl-]', action: btoa},
+					{label: 'decode Base64', icon: 'hdr_weak', shortKey: 'ctrl-shift-]', action: atob},
+					{label: 'format JSON', icon: 'format_line_spacing', shortKey: 'ctrl-shift-f', action: formatJson},
+					{label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatXml}
+				]
 			}
 		},
-
-		signOut () {
-			signOut();
-		},
-
-		getTextArea () {
-			return this.$refs['textareaContainer'].$el ? this.$refs['textareaContainer'].$el : this.$refs['textareaContainer'];
-		},
-
-		resizeTextArea () {
-			let ta = this.getTextArea();
-			ta.setAttribute('style', 'height:' + ta.parentNode.clientHeight + 'px');
-			this.showTextarea = true;
-		},
-
-		displayError (error) {
-			if (error.message) {
-				return error.message;
-			} else if (error.stack) {
-				return error.stack;
-			}
-
-			return 'something went wrong';
-		},
-
-		onTextAreaBlur () {
-			const ta = this.getTextArea();
+		mounted () {
+			console.log(this.$store);
+			window.addEventListener('keydown', this.onKeyDown)
+			this.resizeTextArea();
 			setTimeout(() => {
-				ta.focus();
-			}, 100);
+				this.getTextArea().focus();
+			}, 0);
 		},
-
-		copyToClipboard () {
-			const ta = this.getTextArea();
-			// attempt to add to undo buffer
-			ta.blur();
-			ta.focus();
-
-			ta.select();
-			document.execCommand('copy');
-			copyDebouncer(() => {
-				ta.blur();
-				ta.focus();
-				this.showCopy = true;
-			});
-		},
-
-		handleError (e) {
-			console.error(e);
-			this.error = e;
-			this.showError = true;
-		},
-
-		safeExecute (fnc) {
-			this.error = null;
-			try {
+		methods: {
+			onKeyDown (key) {
 				const ta = this.getTextArea();
 				if (!ta.value) {
 					return;
 				}
 
+				// console.log(key, key.keyCode);
+				if (key.ctrlKey && key.shiftKey && key.keyCode === 70) {
+					let errors = [];
+					try {
+						ta.value = formatJson(ta.value);
+					} catch (e) {
+						errors.push(e);
+					}
+					try {
+						ta.value = formatXml(ta.value);
+					} catch (e) {
+						errors.push(e);
+					}
+
+					if (errors.length === 2) {
+						this.handleError(new Error('text not formatted: could not parse as JSON or XML'));
+					}
+					this.copyToClipboard();
+					return;
+				}
+
+				if (key.ctrlKey && !key.shiftKey && key.keyCode === 219) {
+					return this.safeExecute(encodeURIComponent);
+				} else if (key.ctrlKey && key.shiftKey && key.keyCode === 219) {
+					return this.safeExecute(decodeURIComponent);
+				} else if (key.ctrlKey && !key.shiftKey && key.keyCode === 221) {
+					return this.safeExecute(btoa);
+				} else if (key.ctrlKey && key.shiftKey && key.keyCode === 221) {
+					return this.safeExecute(atob);
+				}
+			},
+
+			signOut () {
+				signOut();
+			},
+
+			getTextArea () {
+				return this.$refs['textareaContainer'].$el ? this.$refs['textareaContainer'].$el : this.$refs['textareaContainer'];
+			},
+
+			resizeTextArea () {
+				let ta = this.getTextArea();
+				ta.setAttribute('style', 'height:' + ta.parentNode.clientHeight + 'px');
+				this.showTextarea = true;
+			},
+
+			displayError (error) {
+				if (error.message) {
+					return error.message;
+				} else if (error.stack) {
+					return error.stack;
+				}
+
+				return 'something went wrong';
+			},
+
+			onTextAreaBlur () {
+				const ta = this.getTextArea();
+				setTimeout(() => {
+					ta.focus();
+				}, 100);
+			},
+
+			copyToClipboard () {
+				const ta = this.getTextArea();
 				// attempt to add to undo buffer
 				ta.blur();
 				ta.focus();
 
-				let value = fnc(ta.value);
-				//this.textarea = value;
-				ta.value = value;
-				if (this.autoCopy) {
-					this.copyToClipboard();
+				ta.select();
+				document.execCommand('copy');
+				copyDebouncer(() => {
+					ta.blur();
+					ta.focus();
+					this.showCopy = true;
+				});
+			},
+
+			handleError (e) {
+				console.error(e);
+				this.$store.commit('error', e);
+			},
+
+			safeExecute (fnc) {
+				this.error = null;
+				try {
+					const ta = this.getTextArea();
+					if (!ta.value) {
+						return;
+					}
+
+					// attempt to add to undo buffer
+					ta.blur();
+					ta.focus();
+
+					let value = fnc(ta.value);
+					//this.textarea = value;
+					ta.value = value;
+					if (this.autoCopy) {
+						this.copyToClipboard();
+					}
+				} catch (e) {
+					this.handleError(e);
 				}
-			} catch (e) {
-				this.handleError(e);
+			}
+		},
+		watch: {
+			'autoCopy' (value) {
+				localStorage.setItem(KEY_AUTO_COPY, value);
+			},
+			'wordWrap' (value) {
+				localStorage.setItem(KEY_WORD_WRAP, value);
 			}
 		}
-	},
-	watch: {
-		'autoCopy' (value) {
-			localStorage.setItem(KEY_AUTO_COPY, value);
-		},
-		'wordWrap' (value) {
-			localStorage.setItem(KEY_WORD_WRAP, value);
-		}
 	}
-}
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  html {
-    background-color: rgb(48, 48, 48);
-    overflow-y: hidden;
-  }
+   html {
+      background-color: rgb(48, 48, 48);
+      overflow-y: hidden;
+   }
 
-  .start textarea.linenumbers {
-    padding-left: 35px;
-    padding-top: 10px;
-    background: url(http://i.imgur.com/2cOaJ.png);
-    background-attachment: local;
-    background-repeat: no-repeat;
-  }
+   .start textarea.linenumbers {
+      padding-left: 35px;
+      padding-top: 10px;
+      background: url(http://i.imgur.com/2cOaJ.png);
+      background-attachment: local;
+      background-repeat: no-repeat;
+   }
 
-  .start textarea {
-    width: 100%;
-    padding: 3px;
-    font-family: "Courier New";
-    margin: 0;
-    border: none;
-  }
+   .start textarea {
+      width: 100%;
+      padding: 3px;
+      font-family: "Courier New";
+      margin: 0;
+      border: none;
+   }
 
-  textarea,
-  pre {
-    -moz-tab-size : 4;
-    -o-tab-size : 4;
-    tab-size : 4;
-  }
+   textarea,
+   pre {
+      -moz-tab-size: 4;
+      -o-tab-size: 4;
+      tab-size: 4;
+   }
 
-  .errorMessage {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+   .errorMessage {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+   }
 
-  .start .snackbarIcon.icon {
-    margin-right: 5px;
-  }
+   .start .snackbarIcon.icon {
+      margin-right: 5px;
+   }
 
-  .start .navigation-drawer {
-    padding: 0px;
-  }
+   .start .navigation-drawer {
+      padding: 0px;
+   }
 
-  .start small.shortKey {
-    color: #777;
-  }
+   .start small.shortKey {
+      color: #777;
+   }
 
-  /* turn off chrome textarea highlight */
-  textarea:focus {
-    outline: none;
-  }
+   /* turn off chrome textarea highlight */
+   textarea:focus {
+      outline: none;
+   }
 
-  textarea {
-    overflow: auto;
-  }
+   textarea {
+      overflow: auto;
+   }
 
-  textarea.nowrap {
-    white-space: pre;
-  }
+   textarea.nowrap {
+      white-space: pre;
+   }
 
-  .edge textarea.nowrap {
-    white-space: nowrap;
-  }
+   .edge textarea.nowrap {
+      white-space: nowrap;
+   }
 
-  /*.toolbar .abcRioButtonLightBlue {*/
-  /*background-color: rgb(48, 48, 48);*/
-  /*}*/
+   /*.toolbar .abcRioButtonLightBlue {*/
+   /*background-color: rgb(48, 48, 48);*/
+   /*}*/
 </style>
