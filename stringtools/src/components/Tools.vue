@@ -1,23 +1,7 @@
 <template>
    <v-app dark>
       <v-navigation-drawer clipped fixed v-model="drawer" app>
-         <v-list dense>
-            <v-subheader>Actions</v-subheader>
-            <v-list-tile v-for="action in actions" @click="safeExecute(action.action)">
-               <v-list-tile-action>
-                  <v-icon>{{action.icon}}</v-icon>
-               </v-list-tile-action>
-               <v-list-tile-content>
-                  <v-list-tile-title>{{action.label}}</v-list-tile-title>
-               </v-list-tile-content>
-               <v-list-tile-action>
-                  <v-list-tile-sub-title>
-                     <small class="shortKey">{{action.shortKey}}</small>
-                  </v-list-tile-sub-title>
-               </v-list-tile-action>
-            </v-list-tile>
-            <v-divider></v-divider>
-         </v-list>
+         <ActionList :actions="actions" v-on:action="safeExecute"></ActionList>
          <Settings></Settings>
 
       </v-navigation-drawer>
@@ -128,13 +112,15 @@
 	let copyDebouncer = debounce(400);
 
 
+	import ActionList from './ActionList.vue'
 	import ErrorToaster from './ErrorToaster.vue'
 	import Settings from './Settings.vue'
 
 	export default {
 		components: {
 			ErrorToaster,
-			Settings
+			Settings,
+			ActionList
 		},
 		name: 'tools',
 		data() {
@@ -317,22 +303,8 @@
       tab-size: 4;
    }
 
-   .errorMessage {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-   }
-
-   .start .snackbarIcon.icon {
-      margin-right: 5px;
-   }
-
    .start .navigation-drawer {
       padding: 0px;
-   }
-
-   .start small.shortKey {
-      color: #777;
    }
 
    /* turn off chrome textarea highlight */
