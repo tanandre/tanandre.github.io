@@ -70,14 +70,14 @@
 	const KEY_AUTO_COPY = 'tanandre.github.io.tools.autoCopy';
 	const KEY_WORD_WRAP = 'tanandre.github.io.tools.wordWrap';
 
-	function signOut () {
+	function signOut() {
 		var auth2 = gapi.auth2.getAuthInstance();
 		auth2.signOut().then(function () {
 			console.log('User signed out.');
 		});
 	}
 
-	function onSignIn (googleUser) {
+	function onSignIn(googleUser) {
 		var profile = googleUser.getBasicProfile();
 		console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
 		console.log('Name: ' + profile.getName());
@@ -85,7 +85,7 @@
 		console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
 	}
 
-	function debounce (ms) {
+	function debounce(ms) {
 		let timer = 0;
 		return (callback) => {
 			clearTimeout(timer);
@@ -93,7 +93,7 @@
 		}
 	}
 
-	function formatXml (input) {
+	function formatXml(input) {
 		const indent = '\t'; //you can set/define other ident than tabs
 		// let xmlString = input.replace(/^\s+|\s+$/g, '');  //trim it (just in case) {method trim() not working in IE8}
 
@@ -134,11 +134,11 @@
 		return xmlArr.join('\n');  //rejoin the array to a string and return it
 	}
 
-	function formatJson (value) {
+	function formatJson(value) {
 		return JSON.stringify(JSON.parse(value), null, "\t");
 	}
 
-	function isEdge () {
+	function isEdge() {
 		return /Edge\/\d./i.test(navigator.userAgent);
 	}
 
@@ -150,7 +150,7 @@
 	export default {
 		components: {ErrorToaster},
 		name: 'tools',
-		data () {
+		data() {
 			return {
 				textarea: '',
 				autoCopy: localStorage.getItem(KEY_AUTO_COPY) !== 'false',
@@ -169,7 +169,7 @@
 				]
 			}
 		},
-		mounted () {
+		mounted() {
 			console.log(this.$store);
 			window.addEventListener('keydown', this.onKeyDown)
 			this.resizeTextArea();
@@ -178,7 +178,7 @@
 			}, 0);
 		},
 		methods: {
-			onKeyDown (key) {
+			onKeyDown(key) {
 				const ta = this.getTextArea();
 				if (!ta.value) {
 					return;
@@ -216,21 +216,21 @@
 				}
 			},
 
-			signOut () {
+			signOut() {
 				signOut();
 			},
 
-			getTextArea () {
+			getTextArea() {
 				return this.$refs['textareaContainer'].$el ? this.$refs['textareaContainer'].$el : this.$refs['textareaContainer'];
 			},
 
-			resizeTextArea () {
+			resizeTextArea() {
 				let ta = this.getTextArea();
 				ta.setAttribute('style', 'height:' + ta.parentNode.clientHeight + 'px');
 				this.showTextarea = true;
 			},
 
-			displayError (error) {
+			displayError(error) {
 				if (error.message) {
 					return error.message;
 				} else if (error.stack) {
@@ -240,14 +240,14 @@
 				return 'something went wrong';
 			},
 
-			onTextAreaBlur () {
+			onTextAreaBlur() {
 				const ta = this.getTextArea();
 				setTimeout(() => {
 					ta.focus();
 				}, 100);
 			},
 
-			copyToClipboard () {
+			copyToClipboard() {
 				const ta = this.getTextArea();
 				// attempt to add to undo buffer
 				ta.blur();
@@ -262,12 +262,12 @@
 				});
 			},
 
-			handleError (e) {
+			handleError(e) {
 				console.error(e);
 				this.$store.commit('error', e);
 			},
 
-			safeExecute (fnc) {
+			safeExecute(fnc) {
 				this.error = null;
 				try {
 					const ta = this.getTextArea();
@@ -291,10 +291,12 @@
 			}
 		},
 		watch: {
-			'autoCopy' (value) {
+			'autoCopy'(value) {
 				localStorage.setItem(KEY_AUTO_COPY, value);
+				this.$store.commit('autoCopy', value);
 			},
-			'wordWrap' (value) {
+			'wordWrap'(value) {
+				this.$store.commit('wordWrap', value);
 				localStorage.setItem(KEY_WORD_WRAP, value);
 			}
 		}

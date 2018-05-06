@@ -1,9 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
+import settingsModule from './store/settingsModule'
+
 Vue.use(Vuex);
 
 const store = new Vuex.Store({
+	modules: {
+		settingsModule
+	},
 	state: {
 		error: null
 	},
