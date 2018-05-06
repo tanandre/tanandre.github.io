@@ -17,24 +17,8 @@
                </v-list-tile-action>
             </v-list-tile>
             <v-divider></v-divider>
-            <v-subheader>Settings</v-subheader>
-            <v-list-tile @click="">
-               <v-list-tile-action>
-                  <v-switch v-model="autoCopy"></v-switch>
-               </v-list-tile-action>
-               <v-list-tile-content @click="autoCopy = !autoCopy">
-                  <v-list-tile-title>Auto copy</v-list-tile-title>
-               </v-list-tile-content>
-            </v-list-tile>
-            <v-list-tile @click="">
-               <v-list-tile-action>
-                  <v-switch v-model="wordWrap"></v-switch>
-               </v-list-tile-action>
-               <v-list-tile-content @click="wordWrap = !wordWrap">
-                  <v-list-tile-title>Word wrap</v-list-tile-title>
-               </v-list-tile-content>
-            </v-list-tile>
          </v-list>
+         <Settings></Settings>
 
       </v-navigation-drawer>
       <v-toolbar app fixed clipped-left dense class="toolbar">
@@ -67,8 +51,7 @@
 </template>
 
 <script>
-	const KEY_AUTO_COPY = 'tanandre.github.io.tools.autoCopy';
-	const KEY_WORD_WRAP = 'tanandre.github.io.tools.wordWrap';
+	import { mapState } from 'vuex';
 
 	function signOut() {
 		var auth2 = gapi.auth2.getAuthInstance();
@@ -146,15 +129,17 @@
 
 
 	import ErrorToaster from './ErrorToaster.vue'
+	import Settings from './Settings.vue'
 
 	export default {
-		components: {ErrorToaster},
+		components: {
+			ErrorToaster,
+			Settings
+		},
 		name: 'tools',
 		data() {
 			return {
 				textarea: '',
-				autoCopy: localStorage.getItem(KEY_AUTO_COPY) !== 'false',
-				wordWrap: localStorage.getItem(KEY_WORD_WRAP) !== 'false',
 				showCopy: false,
 				drawer: true,
 				showTextarea: true,
@@ -168,6 +153,15 @@
 					{label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatXml}
 				]
 			}
+		},
+		computed: {
+			wordWrap() {
+				return this.$store.state.settings.wordWrap;
+			},
+			autoCopy() {
+				return this.$store.state.settings.autoCopy
+			},
+//			...mapState('settings', ['wordWrap', 'autoCopy', 'asdf']),
 		},
 		mounted() {
 			console.log(this.$store);
@@ -282,22 +276,13 @@
 					let value = fnc(ta.value);
 					//this.textarea = value;
 					ta.value = value;
+//					console.log('this.autoCopy', this.autoCopy)
 					if (this.autoCopy) {
 						this.copyToClipboard();
 					}
 				} catch (e) {
 					this.handleError(e);
 				}
-			}
-		},
-		watch: {
-			'autoCopy'(value) {
-				localStorage.setItem(KEY_AUTO_COPY, value);
-				this.$store.commit('autoCopy', value);
-			},
-			'wordWrap'(value) {
-				this.$store.commit('wordWrap', value);
-				localStorage.setItem(KEY_WORD_WRAP, value);
 			}
 		}
 	}

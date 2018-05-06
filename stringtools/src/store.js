@@ -7,7 +7,7 @@ Vue.use(Vuex);
 
 const store = new Vuex.Store({
 	modules: {
-		settingsModule
+		settings: settingsModule
 	},
 	state: {
 		error: null

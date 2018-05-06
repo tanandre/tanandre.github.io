@@ -7,15 +7,14 @@ const settingsModule = {
 		wordWrap: localStorage.getItem(KEY_WORD_WRAP) !== 'false',
 	},
 	mutations: {
-		autoCopy (state, autoCopy) {
-			console.log('setting autocopy', autoCopy);
-			// localStorage.setItem(KEY_AUTO_COPY, autoCopy);
-			state.autoCopy = autoCopy
+		autoCopy(state, value) {
+			localStorage.setItem(KEY_AUTO_COPY, value);
+			state.autoCopy = value
 		},
 
-		wordWrap (state, wordWrap) {
-			// localStorage.setItem(KEY_WORD_WRAP, wordWrap);
-			state.wordWrap = wordWrap
+		wordWrap(state, value) {
+			localStorage.setItem(KEY_WORD_WRAP, value);
+			state.wordWrap = value
 		}
 	}
 };
