@@ -18,14 +18,7 @@
          </v-toolbar-items>
       </v-toolbar>
       <v-content>
-         <textarea
-                 @blur="onTextAreaBlur()"
-                 ref="textareaContainer"
-                 v-show="showTextarea"
-                 class="textarea"
-                 :class="{nowrap: !wordWrap}"
-                 autofocus
-         ></textarea>
+         <Editor ref="textareaContainer"></Editor>
          <ErrorToaster></ErrorToaster>
          <v-snackbar v-model="showCopy" top>
             <span><v-icon class="snackbarIcon">content_copy</v-icon><small>Text copied...</small></span>
@@ -45,7 +38,7 @@
 	}
 
 	function onSignIn(googleUser) {
-		var profile = googleUser.getBasicProfile();
+		const profile = googleUser.getBasicProfile();
 		console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
 		console.log('Name: ' + profile.getName());
 		console.log('Image URL: ' + profile.getImageUrl());
@@ -60,50 +53,6 @@
 		}
 	}
 
-	function formatXml(input) {
-		const indent = '\t'; //you can set/define other ident than tabs
-		// let xmlString = input.replace(/^\s+|\s+$/g, '');  //trim it (just in case) {method trim() not working in IE8}
-
-		const xmlString = input.trim()
-			.replace(/(<([a-zA-Z]+\b)[^>]*>)(?!<\/\2>|[\w\s])/g, "$1\n") //add \n after tag if not followed by the closing tag of pair or text node
-			.replace(/(<\/[a-zA-Z]+[^>]*>)/g, "$1\n") //add \n after closing tag
-			.replace(/>\s+(.+?)\s+<(?!\/)/g, ">\n$1\n<") //add \n between sets of angled brackets and text node between them
-			.replace(/>(.+?)<([a-zA-Z])/g, ">\n$1\n<$2") //add \n between angled brackets and text node between them
-			.replace(/\?></, "?>\n<") //detect a header of XML
-
-		const xmlArr = xmlString.split('\n');  //split it into an array (for analise each line separately)
-
-		//PART 2: indent each line appropriately
-
-		let tabs = '';  //store the current indentation
-		let start = 0;  //starting line
-
-		if (/^<[?]xml/.test(xmlArr[0])) start++;  //if the first line is a header, ignore it
-
-		for (let i = start; i < xmlArr.length; i++) {
-			let line = xmlArr[i].replace(/^\s+|\s+$/g, '');  //trim it (just in case)
-
-			if (/^<[/]/.test(line)) {
-				tabs = tabs.replace(indent, '');  //remove one indent from the store
-				xmlArr[i] = tabs + line;  //add the tabs at the beginning of the line
-			} else if (/<.*>.*<\/.*>|<.*[^>]\/>/.test(line)) {
-				//leave the store as is
-				xmlArr[i] = tabs + line; //add the tabs at the beginning of the line
-			} else if (/<.*>/.test(line)) {
-				xmlArr[i] = tabs + line;  //add the tabs at the beginning of the line
-				tabs += indent;  //and add one indent to the store
-			} else {
-				xmlArr[i] = tabs + line;  // add the tabs at the beginning of the line
-			}
-		}
-
-		//PART 3: return formatted string (source)
-		return xmlArr.join('\n');  //rejoin the array to a string and return it
-	}
-
-	function formatJson(value) {
-		return JSON.stringify(JSON.parse(value), null, "\t");
-	}
 
 	function isEdge() {
 		return /Edge\/\d./i.test(navigator.userAgent);
@@ -111,21 +60,22 @@
 
 	let copyDebouncer = debounce(400);
 
-
+	import formatUtil from '../js/FormatUtil'
 	import ActionList from './ActionList.vue'
 	import ErrorToaster from './ErrorToaster.vue'
 	import Settings from './Settings.vue'
+	import Editor from './Editor.vue'
 
 	export default {
 		components: {
 			ErrorToaster,
 			Settings,
-			ActionList
+			ActionList,
+			Editor
 		},
 		name: 'tools',
 		data() {
 			return {
-				textarea: '',
 				showCopy: false,
 				drawer: true,
 				showTextarea: true,
@@ -135,8 +85,8 @@
 					{label: 'decode URL', icon: 'cloud_queue', shortKey: 'ctrl-shift-[', action: decodeURIComponent},
 					{label: 'encode Base64', icon: 'hdr_strong', shortKey: 'ctrl-]', action: btoa},
 					{label: 'decode Base64', icon: 'hdr_weak', shortKey: 'ctrl-shift-]', action: atob},
-					{label: 'format JSON', icon: 'format_line_spacing', shortKey: 'ctrl-shift-f', action: formatJson},
-					{label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatXml}
+					{label: 'format JSON', icon: 'format_line_spacing', shortKey: 'ctrl-shift-f', action: formatUtil.formatJson},
+					{label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatUtil.formatXml}
 				]
 			}
 		},
@@ -147,15 +97,9 @@
 			autoCopy() {
 				return this.$store.state.settings.autoCopy
 			},
-//			...mapState('settings', ['wordWrap', 'autoCopy', 'asdf']),
 		},
 		mounted() {
-			console.log(this.$store);
 			window.addEventListener('keydown', this.onKeyDown)
-			this.resizeTextArea();
-			setTimeout(() => {
-				this.getTextArea().focus();
-			}, 0);
 		},
 		methods: {
 			onKeyDown(key) {
@@ -168,12 +112,12 @@
 				if (key.ctrlKey && key.shiftKey && key.keyCode === 70) {
 					let errors = [];
 					try {
-						ta.value = formatJson(ta.value);
+						ta.value = formatUtil.formatJson(ta.value);
 					} catch (e) {
 						errors.push(e);
 					}
 					try {
-						ta.value = formatXml(ta.value);
+						ta.value = formatUtil.formatXml(ta.value);
 					} catch (e) {
 						errors.push(e);
 					}
@@ -202,29 +146,6 @@
 
 			getTextArea() {
 				return this.$refs['textareaContainer'].$el ? this.$refs['textareaContainer'].$el : this.$refs['textareaContainer'];
-			},
-
-			resizeTextArea() {
-				let ta = this.getTextArea();
-				ta.setAttribute('style', 'height:' + ta.parentNode.clientHeight + 'px');
-				this.showTextarea = true;
-			},
-
-			displayError(error) {
-				if (error.message) {
-					return error.message;
-				} else if (error.stack) {
-					return error.stack;
-				}
-
-				return 'something went wrong';
-			},
-
-			onTextAreaBlur() {
-				const ta = this.getTextArea();
-				setTimeout(() => {
-					ta.focus();
-				}, 100);
 			},
 
 			copyToClipboard() {
@@ -260,9 +181,7 @@
 					ta.focus();
 
 					let value = fnc(ta.value);
-					//this.textarea = value;
 					ta.value = value;
-//					console.log('this.autoCopy', this.autoCopy)
 					if (this.autoCopy) {
 						this.copyToClipboard();
 					}
@@ -280,51 +199,7 @@
       overflow-y: hidden;
    }
 
-   .start textarea.linenumbers {
-      padding-left: 35px;
-      padding-top: 10px;
-      background: url(http://i.imgur.com/2cOaJ.png);
-      background-attachment: local;
-      background-repeat: no-repeat;
-   }
-
-   .start textarea {
-      width: 100%;
-      padding: 3px;
-      font-family: "Courier New";
-      margin: 0;
-      border: none;
-   }
-
-   textarea,
-   pre {
-      -moz-tab-size: 4;
-      -o-tab-size: 4;
-      tab-size: 4;
-   }
-
    .start .navigation-drawer {
       padding: 0px;
    }
-
-   /* turn off chrome textarea highlight */
-   textarea:focus {
-      outline: none;
-   }
-
-   textarea {
-      overflow: auto;
-   }
-
-   textarea.nowrap {
-      white-space: pre;
-   }
-
-   .edge textarea.nowrap {
-      white-space: nowrap;
-   }
-
-   /*.toolbar .abcRioButtonLightBlue {*/
-   /*background-color: rgb(48, 48, 48);*/
-   /*}*/
 </style>
