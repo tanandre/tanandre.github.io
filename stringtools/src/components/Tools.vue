@@ -3,18 +3,13 @@
       <v-navigation-drawer clipped fixed v-model="drawer" app>
          <ActionList :actions="actions" v-on:action="safeExecute"></ActionList>
          <Settings></Settings>
-
       </v-navigation-drawer>
       <v-toolbar app fixed clipped-left dense class="toolbar">
          <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
          <v-toolbar-title>String Tools</v-toolbar-title>
          <v-spacer></v-spacer>
-         <!--<div class="g-signin2" data-onsuccess="onSignIn"></div>-->
-
+         <UserAuthPane></UserAuthPane>
          <v-toolbar-items>
-            <v-btn @click="signOut()" flat small>Sign out
-               <v-icon right dark>account_circle</v-icon>
-            </v-btn>
          </v-toolbar-items>
       </v-toolbar>
       <v-content>
@@ -29,21 +24,7 @@
 
 <script>
 	import { mapState } from 'vuex';
-
-	function signOut() {
-		var auth2 = gapi.auth2.getAuthInstance();
-		auth2.signOut().then(function () {
-			console.log('User signed out.');
-		});
-	}
-
-	function onSignIn(googleUser) {
-		const profile = googleUser.getBasicProfile();
-		console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-		console.log('Name: ' + profile.getName());
-		console.log('Image URL: ' + profile.getImageUrl());
-		console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-	}
+	import store from '../store';
 
 	function debounce(ms) {
 		let timer = 0;
@@ -52,7 +33,6 @@
 			timer = setTimeout(callback, ms);
 		}
 	}
-
 
 	function isEdge() {
 		return /Edge\/\d./i.test(navigator.userAgent);
@@ -65,15 +45,16 @@
 	import ErrorToaster from './ErrorToaster.vue'
 	import Settings from './Settings.vue'
 	import Editor from './Editor.vue'
+	import UserAuthPane from './UserAuthPane.vue'
 
 	export default {
 		components: {
 			ErrorToaster,
 			Settings,
 			ActionList,
+			UserAuthPane,
 			Editor
 		},
-		name: 'tools',
 		data() {
 			return {
 				showCopy: false,
@@ -81,22 +62,25 @@
 				showTextarea: true,
 				isEdge: isEdge(),
 				actions: [
-					{label: 'encode URL', icon: 'cloud', shortKey: 'ctrl-[', action: encodeURIComponent},
-					{label: 'decode URL', icon: 'cloud_queue', shortKey: 'ctrl-shift-[', action: decodeURIComponent},
-					{label: 'encode Base64', icon: 'hdr_strong', shortKey: 'ctrl-]', action: btoa},
-					{label: 'decode Base64', icon: 'hdr_weak', shortKey: 'ctrl-shift-]', action: atob},
-					{label: 'format JSON', icon: 'format_line_spacing', shortKey: 'ctrl-shift-f', action: formatUtil.formatJson},
-					{label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatUtil.formatXml}
+					{ label: 'encode URL', icon: 'cloud', shortKey: 'ctrl-[', action: encodeURIComponent },
+					{ label: 'decode URL', icon: 'cloud_queue', shortKey: 'ctrl-shift-[', action: decodeURIComponent },
+					{ label: 'encode Base64', icon: 'hdr_strong', shortKey: 'ctrl-]', action: btoa },
+					{ label: 'decode Base64', icon: 'hdr_weak', shortKey: 'ctrl-shift-]', action: atob },
+					{
+						label: 'format JSON',
+						icon: 'format_line_spacing',
+						shortKey: 'ctrl-shift-f',
+						action: formatUtil.formatJson
+					},
+					{ label: 'format XML', icon: 'code', shortKey: 'ctrl-shift-f', action: formatUtil.formatXml }
 				]
 			}
 		},
 		computed: {
-			wordWrap() {
-				return this.$store.state.settings.wordWrap;
-			},
-			autoCopy() {
-				return this.$store.state.settings.autoCopy
-			},
+			...mapState({
+				user: state => state.session.user,
+				autoCopy: state => state.settings.autoCopy
+			}),
 		},
 		mounted() {
 			window.addEventListener('keydown', this.onKeyDown)
@@ -138,10 +122,6 @@
 				} else if (key.ctrlKey && key.shiftKey && key.keyCode === 221) {
 					return this.safeExecute(atob);
 				}
-			},
-
-			signOut() {
-				signOut();
 			},
 
 			getTextArea() {
@@ -194,12 +174,7 @@
 </script>
 
 <style scoped>
-   html {
-      background-color: rgb(48, 48, 48);
-      overflow-y: hidden;
-   }
-
    .start .navigation-drawer {
-      padding: 0px;
+      padding: 0;
    }
 </style>

@@ -20,9 +20,9 @@
 			}
 		},
 		computed: {
-			wordWrap() {
-				return this.$store.state.settings.wordWrap;
-			},
+			...mapState({
+				wordWrap: state => state.settings.wordWrap
+			}),
 		},
 		mounted() {
 			this.resizeTextArea();

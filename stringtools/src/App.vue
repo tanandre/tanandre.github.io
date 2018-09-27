@@ -7,7 +7,7 @@
 <script>
 	import Tools from './components/Tools.vue'
 
-	export default {
+	 export default {
 		name: 'app',
 		components: {
 			Tools
